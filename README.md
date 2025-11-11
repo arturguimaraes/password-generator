@@ -13,7 +13,7 @@ You can customize which character sets to use (uppercase, lowercase, numbers, sy
   - Lowercase letters (a–z)
   - Numbers (0–9)
   - Symbols (!@#$…)
-- ✅ Adjustable password length (default: 12, configurable)
+- ✅ Adjustable password length (default: 16, configurable)
 - ✅ Uses `window.crypto.getRandomValues` when available for better randomness
 - ✅ Each generated password is stored with its creation date/time
 - ✅ History table:
