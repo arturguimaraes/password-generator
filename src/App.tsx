@@ -7,7 +7,7 @@ type PasswordEntry = {
 };
 
 const STORAGE_KEY = 'password-generator:history';
-const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // ~ 1 month
 
 const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
@@ -87,20 +87,25 @@ const App = () => {
   const [length, setLength] = useState(16);
 
   const [currentPassword, setCurrentPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
   const [history, setHistory] = useState<PasswordEntry[]>(() => {
-    // Guard for SSR / tests (harmless in Vite SPA)
     if (typeof window === 'undefined') return [];
-
     return loadHistory();
   });
+  const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Persist to localStorage whenever history changes
+  // Persist history to localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     saveHistory(history);
   }, [history]);
+
+  // Clear "copied" state after a short delay
+  useEffect(() => {
+    if (!copiedId) return;
+    const timeout = setTimeout(() => setCopiedId(null), 1500);
+    return () => clearTimeout(timeout);
+  }, [copiedId]);
 
   const handleGenerate = () => {
     setError(null);
@@ -142,6 +147,16 @@ const App = () => {
     if (Number.isNaN(value)) return;
     const clamped = Math.min(64, Math.max(4, value));
     setLength(clamped);
+  };
+
+  const handleCopy = async (value: string, id: string) => {
+    if (!navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(id);
+    } catch {
+      // ignore errors silently
+    }
   };
 
   return (
@@ -220,7 +235,7 @@ const App = () => {
                 <tr>
                   <th>Password</th>
                   <th>Generated at</th>
-                  <th />
+                  <th className='table__actions'>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,13 +246,24 @@ const App = () => {
                     </td>
                     <td>{new Date(entry.createdAt).toLocaleString()}</td>
                     <td className='table__actions'>
-                      <button
-                        className='btn btn--icon'
-                        onClick={() => handleDelete(entry.id)}
-                        aria-label='Delete password'
-                      >
-                        ✕
-                      </button>
+                      <div className='table__row-actions'>
+                        <button
+                          className='btn btn--icon table__copy-btn'
+                          onClick={() => handleCopy(entry.value, entry.id)}
+                          aria-label='Copy password'
+                          title={copiedId === entry.id ? 'Copied!' : 'Copy password'}
+                        >
+                          {copiedId === entry.id ? '✅' : '📋'}
+                        </button>
+                        <button
+                          className='btn btn--icon'
+                          onClick={() => handleDelete(entry.id)}
+                          aria-label='Delete password'
+                          title='Delete password'
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
