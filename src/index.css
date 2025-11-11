@@ -123,7 +123,22 @@ body {
 }
 
 .table-wrapper {
+  margin-top: 0.5rem;
+  /* horizontal scroll for long passwords */
   overflow-x: auto;
+  /* vertical scroll when it gets too tall */
+  max-height: 320px; /* or try 50vh for half the viewport height */
+  overflow-y: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #1f2937;
+}
+
+/* optional: keep header visible while scrolling */
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: #020617;
+  z-index: 1;
 }
 
 .table {
@@ -159,4 +174,21 @@ body {
 .empty {
   font-size: 0.9rem;
   color: #9ca3af;
+}
+
+.table__row-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Copy button only appears when hovering the row */
+.table__copy-btn {
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.table tr:hover .table__copy-btn {
+  opacity: 1;
 }
