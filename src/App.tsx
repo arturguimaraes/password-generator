@@ -218,9 +218,9 @@ const App = () => {
               type='number'
               min={4}
               max={64}
+              step={1}
               value={length}
               onChange={handleLengthChange}
-              onScroll={(e) => e.preventDefault()}
             />
           </label>
         </div>
