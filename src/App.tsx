@@ -6,13 +6,22 @@ type PasswordEntry = {
   createdAt: string; // ISO string
 };
 
+// LocalStorage key and configuration constants
 const STORAGE_KEY = 'password-generator:history';
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // ~ 1 month
 
+// Character pools for password generation
 const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
 const NUMBERS = '0123456789';
 const SYMBOLS = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+// Default configuration
+const DEFAULT_USE_UPPERCASE = true;
+const DEFAULT_USE_LOWERCASE = true;
+const DEFAULT_USE_NUMBERS = true;
+const DEFAULT_USE_SYMBOLS = true;
+const DEFAULT_PASSWORD_LENGTH = 10;
 
 const pruneOldPasswords = (entries: PasswordEntry[]): PasswordEntry[] => {
   const now = Date.now();
@@ -80,11 +89,11 @@ const generatePassword = (opts: {
 };
 
 const App = () => {
-  const [useUppercase, setUseUppercase] = useState(true);
-  const [useLowercase, setUseLowercase] = useState(true);
-  const [useNumbers, setUseNumbers] = useState(true);
-  const [useSymbols, setUseSymbols] = useState(true);
-  const [length, setLength] = useState(16);
+  const [useUppercase, setUseUppercase] = useState(DEFAULT_USE_UPPERCASE);
+  const [useLowercase, setUseLowercase] = useState(DEFAULT_USE_LOWERCASE);
+  const [useNumbers, setUseNumbers] = useState(DEFAULT_USE_NUMBERS);
+  const [useSymbols, setUseSymbols] = useState(DEFAULT_USE_SYMBOLS);
+  const [length, setLength] = useState(DEFAULT_PASSWORD_LENGTH);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [history, setHistory] = useState<PasswordEntry[]>(() => {
@@ -205,7 +214,14 @@ const App = () => {
 
           <label className='length-input'>
             <span>Password length</span>
-            <input type='number' min={4} max={64} value={length} onChange={handleLengthChange} />
+            <input
+              type='number'
+              min={4}
+              max={64}
+              value={length}
+              onChange={handleLengthChange}
+              onScroll={(e) => e.preventDefault()}
+            />
           </label>
         </div>
 
