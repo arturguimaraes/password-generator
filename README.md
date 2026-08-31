@@ -32,8 +32,8 @@ You can customize which character sets to use (uppercase, lowercase, numbers, sy
   a PR into `main`, titled with a running release number + commit count and with the commit
   list in the body.
 - **Deploy** (`.github/workflows/deploy.yml`): every push to `main` (i.e. when the release PR
-  is merged) builds the app and publishes `dist/` to the `gh-pages` branch. Can also be run
-  manually from the Actions tab.
+  is merged) builds the app and publishes it via GitHub Pages (Pages "Source" must be set to
+  "GitHub Actions"). Can also be run manually from the Actions tab.
 - **Version footer**: the build injects `__APP_VERSION__` (from `package.json`),
   `__COMMIT_SHA__`, `__BUILD_DATE__` and `__BUILD_TIME__` (see `vite.config.ts`), shown in the
   page footer with a link to the exact commit.
