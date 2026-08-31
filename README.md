@@ -45,8 +45,8 @@ You can customize which character sets to use (uppercase, lowercase, numbers, sy
 src/
   main.tsx            – entry point
   App.tsx             – state + wiring only
-  types.ts            – shared types
-  constants.ts        – storage keys, defaults, charset option list
+  types/              – shared types
+  constants/          – storage keys, defaults, charset option list
   lib/
     password.ts       – password generation (crypto RNG + char pools)
     storage.ts        – localStorage load/save for history and config

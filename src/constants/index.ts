@@ -1,4 +1,4 @@
-import type { CharsetKey, Config } from './types';
+import type { CharsetKey, Config } from '../types';
 
 // LocalStorage keys
 export const STORAGE_KEY = 'password-generator:history';
