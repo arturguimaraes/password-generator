@@ -19,6 +19,9 @@ body {
 .app {
   width: 100%;
   max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 4rem);
 }
 
 .app__title {
@@ -181,6 +184,23 @@ body {
   gap: 0.25rem;
   justify-content: flex-end;
   align-items: center;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 1rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.footer__link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.footer__link:hover {
+  color: #9ca3af;
 }
 
 /* Copy button only appears when hovering the row */

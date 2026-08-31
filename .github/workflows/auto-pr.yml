@@ -1,0 +1,80 @@
+name: Auto PR to main
+
+on:
+  push:
+    branches: [development]
+
+# Needed so the workflow can open / update pull requests.
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: auto-pr-development
+  cancel-in-progress: true
+
+jobs:
+  open-or-update-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create or update PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          BASE=main
+          HEAD=development
+
+          # Compare via the API so we don't depend on which refs were fetched.
+          CMP=$(gh api "repos/${REPO}/compare/${BASE}...${HEAD}")
+          COMMIT_COUNT=$(echo "$CMP" | jq '.ahead_by')
+
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "development is not ahead of main — nothing to do."
+            exit 0
+          fi
+
+          COMMIT_LIST=$(echo "$CMP" | jq -r \
+            '.commits[] | "- \(.commit.message | split("\n")[0]) (`\(.sha[0:7])`) — \(.commit.author.name)"')
+
+          # Sequential release number = (PRs already merged into main) + 1.
+          MERGED_COUNT=$(gh pr list --base "$BASE" --state merged --limit 1000 --json number --jq 'length')
+          RELEASE_NUMBER=$((MERGED_COUNT + 1))
+
+          TITLE="Release #${RELEASE_NUMBER}: ${COMMIT_COUNT} commit(s) from ${HEAD}"
+
+          BODY=$(cat <<EOF
+          ## 🚀 Auto-generated release PR
+
+          | | |
+          |---|---|
+          | Release number | **#${RELEASE_NUMBER}** |
+          | Commits ahead of \`${BASE}\` | **${COMMIT_COUNT}** |
+          | Previously merged PRs | ${MERGED_COUNT} |
+
+          ### Commits in this PR
+          ${COMMIT_LIST}
+
+          ---
+          _Opened / refreshed automatically on push to \`${HEAD}\` at $(date -u '+%Y-%m-%d %H:%M:%S') UTC._
+          _Merging this PR triggers a deploy to GitHub Pages._
+          EOF
+          )
+
+          EXISTING=$(gh pr list --base "$BASE" --head "$HEAD" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Updating existing PR #${EXISTING}"
+            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
+          else
+            echo "Creating new PR"
+            gh pr create --base "$BASE" --head "$HEAD" --title "$TITLE" --body "$BODY"
+          fi

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Footer } from './Footer';
 
 type PasswordEntry = {
   id: string;
@@ -288,6 +289,8 @@ const App = () => {
           </div>
         )}
       </section>
+
+      <Footer />
     </div>
   );
 };
