@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
@@ -21,7 +27,7 @@ body {
   max-width: 720px;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 4rem);
+  flex: 1;
 }
 
 .app__title {
@@ -41,6 +47,18 @@ body {
 .card__title {
   margin: 0 0 1rem;
   font-size: 1.1rem;
+}
+
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card__header .card__title {
+  margin: 0;
 }
 
 .options-grid {
@@ -88,6 +106,23 @@ body {
 
 .btn:hover {
   background: #16a34a;
+}
+
+.btn--sm {
+  margin-top: 0;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn--danger {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
+
+.btn--danger:hover {
+  background: #ef4444;
+  color: #450a0a;
 }
 
 .btn--icon {

@@ -1,133 +1,42 @@
 import { useEffect, useState } from 'react';
-import { Footer } from './Footer';
+import { Footer } from './components/Footer';
+import { HistoryCard } from './components/HistoryCard';
+import { OptionsCard } from './components/OptionsCard';
+import { DEFAULT_CONFIG } from './constants';
+import { generatePassword } from './lib/password';
+import { loadConfig, loadHistory, saveConfig, saveHistory, sortByNewest } from './lib/storage';
+import type { CharsetKey, Config, PasswordEntry } from './types';
 
-type PasswordEntry = {
-  id: string;
-  value: string;
-  createdAt: string; // ISO string
-};
-
-// LocalStorage key and configuration constants
-const STORAGE_KEY = 'password-generator:history';
-const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // ~ 1 month
-
-// Character pools for password generation
-const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
-const NUMBERS = '0123456789';
-const SYMBOLS = '!@#$%^&*()_+[]{}|;:,.<>?';
-
-// Default configuration
-const DEFAULT_USE_UPPERCASE = true;
-const DEFAULT_USE_LOWERCASE = true;
-const DEFAULT_USE_NUMBERS = true;
-const DEFAULT_USE_SYMBOLS = true;
-const DEFAULT_PASSWORD_LENGTH = 10;
-
-const pruneOldPasswords = (entries: PasswordEntry[]): PasswordEntry[] => {
-  const now = Date.now();
-  return entries.filter((entry) => {
-    const ts = new Date(entry.createdAt).getTime();
-    if (Number.isNaN(ts)) return false;
-    return now - ts <= MAX_AGE_MS;
-  });
-};
-
-const sortByNewest = (entries: PasswordEntry[]): PasswordEntry[] =>
-  [...entries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-const loadHistory = (): PasswordEntry[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as PasswordEntry[];
-    return sortByNewest(pruneOldPasswords(parsed));
-  } catch {
-    return [];
-  }
-};
-
-const saveHistory = (entries: PasswordEntry[]): void => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-};
-
-const getRandomInt = (max: number): number => {
-  if (window.crypto?.getRandomValues) {
-    const arr = new Uint32Array(1);
-    window.crypto.getRandomValues(arr);
-    return arr[0] % max;
-  }
-  return Math.floor(Math.random() * max);
-};
-
-const generatePassword = (opts: {
-  length: number;
-  useUppercase: boolean;
-  useLowercase: boolean;
-  useNumbers: boolean;
-  useSymbols: boolean;
-}): string => {
-  const pools: string[] = [];
-
-  if (opts.useUppercase) pools.push(UPPERCASE);
-  if (opts.useLowercase) pools.push(LOWERCASE);
-  if (opts.useNumbers) pools.push(NUMBERS);
-  if (opts.useSymbols) pools.push(SYMBOLS);
-
-  if (pools.length === 0) {
-    throw new Error('Select at least one character type.');
-  }
-
-  const all = pools.join('');
-  let password = '';
-
-  for (let i = 0; i < opts.length; i++) {
-    const idx = getRandomInt(all.length);
-    password += all[idx];
-  }
-
-  return password;
-};
+const isBrowser = typeof window !== 'undefined';
 
 const App = () => {
-  const [useUppercase, setUseUppercase] = useState(DEFAULT_USE_UPPERCASE);
-  const [useLowercase, setUseLowercase] = useState(DEFAULT_USE_LOWERCASE);
-  const [useNumbers, setUseNumbers] = useState(DEFAULT_USE_NUMBERS);
-  const [useSymbols, setUseSymbols] = useState(DEFAULT_USE_SYMBOLS);
-  const [length, setLength] = useState(DEFAULT_PASSWORD_LENGTH);
-
+  const [config, setConfig] = useState<Config>(() => (isBrowser ? loadConfig() : DEFAULT_CONFIG));
   const [currentPassword, setCurrentPassword] = useState('');
-  const [history, setHistory] = useState<PasswordEntry[]>(() => {
-    if (typeof window === 'undefined') return [];
-    return loadHistory();
-  });
+  const [history, setHistory] = useState<PasswordEntry[]>(() => (isBrowser ? loadHistory() : []));
   const [error, setError] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Persist history to localStorage
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    saveHistory(history);
+    if (isBrowser) saveHistory(history);
   }, [history]);
 
-  // Clear "copied" state after a short delay
+  // Persist the generation config so it is reused on the next visit
   useEffect(() => {
-    if (!copiedId) return;
-    const timeout = setTimeout(() => setCopiedId(null), 1500);
-    return () => clearTimeout(timeout);
-  }, [copiedId]);
+    if (isBrowser) saveConfig(config);
+  }, [config]);
+
+  const handleCharsetChange = (key: CharsetKey, value: boolean) => {
+    setConfig((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleLengthChange = (value: number) => {
+    setConfig((prev) => ({ ...prev, length: value }));
+  };
 
   const handleGenerate = () => {
     setError(null);
     try {
-      const pwd = generatePassword({
-        length,
-        useUppercase,
-        useLowercase,
-        useNumbers,
-        useSymbols,
-      });
-
+      const pwd = generatePassword(config);
       const now = new Date().toISOString();
       const newEntry: PasswordEntry = {
         id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
@@ -135,16 +44,10 @@ const App = () => {
         createdAt: now,
       };
 
-      const next = sortByNewest(pruneOldPasswords([newEntry, ...history]));
-
       setCurrentPassword(pwd);
-      setHistory(next);
+      setHistory((prev) => sortByNewest([newEntry, ...prev]));
     } catch (e) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('Unexpected error generating password.');
-      }
+      setError(e instanceof Error ? e.message : 'Unexpected error generating password.');
     }
   };
 
@@ -152,20 +55,10 @@ const App = () => {
     setHistory((prev) => prev.filter((entry) => entry.id !== id));
   };
 
-  const handleLengthChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const value = Number(e.target.value);
-    if (Number.isNaN(value)) return;
-    const clamped = Math.min(64, Math.max(4, value));
-    setLength(clamped);
-  };
-
-  const handleCopy = async (value: string, id: string) => {
-    if (!navigator.clipboard) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedId(id);
-    } catch {
-      // ignore errors silently
+  const handleClearHistory = () => {
+    if (history.length === 0) return;
+    if (window.confirm('Delete all password history? This cannot be undone.')) {
+      setHistory([]);
     }
   };
 
@@ -173,122 +66,16 @@ const App = () => {
     <div className='app'>
       <h1 className='app__title'>Password Generator</h1>
 
-      <section className='card'>
-        <h2 className='card__title'>Options</h2>
+      <OptionsCard
+        config={config}
+        onCharsetChange={handleCharsetChange}
+        onLengthChange={handleLengthChange}
+        onGenerate={handleGenerate}
+        error={error}
+        generated={currentPassword}
+      />
 
-        <div className='options-grid'>
-          <label className='checkbox'>
-            <input
-              type='checkbox'
-              checked={useUppercase}
-              onChange={(e) => setUseUppercase(e.target.checked)}
-            />
-            <span>Uppercase (A–Z)</span>
-          </label>
-
-          <label className='checkbox'>
-            <input
-              type='checkbox'
-              checked={useLowercase}
-              onChange={(e) => setUseLowercase(e.target.checked)}
-            />
-            <span>Lowercase (a–z)</span>
-          </label>
-
-          <label className='checkbox'>
-            <input
-              type='checkbox'
-              checked={useNumbers}
-              onChange={(e) => setUseNumbers(e.target.checked)}
-            />
-            <span>Numbers (0–9)</span>
-          </label>
-
-          <label className='checkbox'>
-            <input
-              type='checkbox'
-              checked={useSymbols}
-              onChange={(e) => setUseSymbols(e.target.checked)}
-            />
-            <span>Symbols (!@#$...)</span>
-          </label>
-
-          <label className='length-input'>
-            <span>Password length</span>
-            <input
-              type='number'
-              min={4}
-              max={64}
-              step={1}
-              value={length}
-              onChange={handleLengthChange}
-            />
-          </label>
-        </div>
-
-        <button className='btn' onClick={handleGenerate}>
-          Generate password
-        </button>
-
-        {error && <p className='error'>{error}</p>}
-
-        {currentPassword && (
-          <div className='current-password'>
-            <span>Last generated:</span>
-            <code>{currentPassword}</code>
-          </div>
-        )}
-      </section>
-
-      <section className='card'>
-        <h2 className='card__title'>History (last 30 days)</h2>
-
-        {history.length === 0 ? (
-          <p className='empty'>No passwords generated yet.</p>
-        ) : (
-          <div className='table-wrapper'>
-            <table className='table'>
-              <thead>
-                <tr>
-                  <th>Password</th>
-                  <th>Generated at</th>
-                  <th className='table__actions'>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((entry) => (
-                  <tr key={entry.id}>
-                    <td>
-                      <code>{entry.value}</code>
-                    </td>
-                    <td>{new Date(entry.createdAt).toLocaleString()}</td>
-                    <td className='table__actions'>
-                      <div className='table__row-actions'>
-                        <button
-                          className='btn btn--icon table__copy-btn'
-                          onClick={() => handleCopy(entry.value, entry.id)}
-                          aria-label='Copy password'
-                          title={copiedId === entry.id ? 'Copied!' : 'Copy password'}
-                        >
-                          {copiedId === entry.id ? '✅' : '📋'}
-                        </button>
-                        <button
-                          className='btn btn--icon'
-                          onClick={() => handleDelete(entry.id)}
-                          aria-label='Delete password'
-                          title='Delete password'
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <HistoryCard entries={history} onDelete={handleDelete} onClear={handleClearHistory} />
 
       <Footer />
     </div>

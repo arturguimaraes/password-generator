@@ -1,4 +1,4 @@
-const REPO_URL = 'https://github.com/arturguimaraes/password-generator';
+import { REPO_URL } from '../constants';
 
 export function Footer() {
   return (
