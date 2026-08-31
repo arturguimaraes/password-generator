@@ -5,15 +5,20 @@ import react from '@vitejs/plugin-react';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 
-const gitShort = (): string => {
+const git = (cmd: string, fallback: string): string => {
   try {
-    return execSync('git rev-parse --short HEAD').toString().trim();
+    return execSync(`git ${cmd}`).toString().trim();
   } catch {
-    return 'unknown';
+    return fallback;
   }
 };
 
-const commitSha = (process.env.GITHUB_SHA ?? gitShort()).slice(0, 7);
+const commitSha = (process.env.GITHUB_SHA ?? git('rev-parse HEAD', 'unknown')).slice(0, 7);
+
+// Increments on every CI run; falls back to the local commit count.
+const buildNumber = process.env.GITHUB_RUN_NUMBER ?? git('rev-list --count HEAD', '0');
+
+const appVersion = `${pkg.version}+${buildNumber}`;
 
 const now = new Date();
 const buildDate = now.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -24,7 +29,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/password-generator/',
   define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_VERSION__: JSON.stringify(appVersion),
     __COMMIT_SHA__: JSON.stringify(commitSha),
     __BUILD_DATE__: JSON.stringify(buildDate),
     __BUILD_TIME__: JSON.stringify(buildTime),

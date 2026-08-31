@@ -43,6 +43,18 @@ body {
   font-size: 1.1rem;
 }
 
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card__header .card__title {
+  margin: 0;
+}
+
 .options-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -88,6 +100,23 @@ body {
 
 .btn:hover {
   background: #16a34a;
+}
+
+.btn--sm {
+  margin-top: 0;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.btn--danger {
+  background: transparent;
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
+
+.btn--danger:hover {
+  background: #ef4444;
+  color: #450a0a;
 }
 
 .btn--icon {
