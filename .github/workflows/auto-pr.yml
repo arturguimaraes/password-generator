@@ -17,6 +17,11 @@ jobs:
   open-or-update-pr:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - name: Create or update PR
         env:
           GH_TOKEN: ${{ github.token }}
@@ -28,7 +33,7 @@ jobs:
           BASE=main
           HEAD=development
 
-          # Compare via the API so we don't depend on local git history.
+          # Compare via the API so we don't depend on which refs were fetched.
           CMP=$(gh api "repos/${REPO}/compare/${BASE}...${HEAD}")
           COMMIT_COUNT=$(echo "$CMP" | jq '.ahead_by')
 
