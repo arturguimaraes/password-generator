@@ -17,33 +17,31 @@ jobs:
   open-or-update-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Create or update PR
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
           BASE=main
           HEAD=development
 
-          # Commits that are on development but not yet on main.
-          COMMIT_COUNT=$(git rev-list --count "origin/${BASE}..origin/${HEAD}")
+          # Compare via the API so we don't depend on local git history.
+          CMP=$(gh api "repos/${REPO}/compare/${BASE}...${HEAD}")
+          COMMIT_COUNT=$(echo "$CMP" | jq '.ahead_by')
+
           if [ "$COMMIT_COUNT" -eq 0 ]; then
             echo "development is not ahead of main — nothing to do."
             exit 0
           fi
 
+          COMMIT_LIST=$(echo "$CMP" | jq -r \
+            '.commits[] | "- \(.commit.message | split("\n")[0]) (`\(.sha[0:7])`) — \(.commit.author.name)"')
+
           # Sequential release number = (PRs already merged into main) + 1.
           MERGED_COUNT=$(gh pr list --base "$BASE" --state merged --limit 1000 --json number --jq 'length')
           RELEASE_NUMBER=$((MERGED_COUNT + 1))
-
-          COMMIT_LIST=$(git log "origin/${BASE}..origin/${HEAD}" \
-            --pretty=format:'- %s (`%h`) — %an')
 
           TITLE="Release #${RELEASE_NUMBER}: ${COMMIT_COUNT} commit(s) from ${HEAD}"
 
