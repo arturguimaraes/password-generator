@@ -22,6 +22,7 @@ You can customize which character sets to use (uppercase, lowercase, numbers, sy
   - Shows password and generated date/time
   - Copy and delete buttons for each entry
   - "Clear all" button to wipe the whole history at once
+- ✅ Light / dark theme toggle (top-right), following the OS by default and remembered in `localStorage`
 - ✅ 100% client-side, no backend, no tracking
 
 ---
@@ -55,6 +56,7 @@ src/
     GeneratedPassword.tsx
     HistoryCard.tsx     – history table, copy/delete/clear-all
     CopyButton.tsx      – self-contained copy-to-clipboard button
+    ThemeToggle.tsx     – light/dark switch, persisted to localStorage
     Footer.tsx          – version / commit / build-time line
   styles/index.css
 ```
