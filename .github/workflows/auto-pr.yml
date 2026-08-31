@@ -20,6 +20,7 @@ jobs:
       - name: Create or update PR
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
