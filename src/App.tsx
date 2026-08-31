@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Footer } from './components/Footer';
 import { HistoryCard } from './components/HistoryCard';
 import { OptionsCard } from './components/OptionsCard';
+import { ThemeToggle } from './components/ThemeToggle';
 import { DEFAULT_CONFIG } from './constants';
 import { generatePassword } from './lib/password';
 import { loadConfig, loadHistory, saveConfig, saveHistory, sortByNewest } from './lib/storage';
@@ -64,6 +65,7 @@ const App = () => {
 
   return (
     <div className='app'>
+      <ThemeToggle />
       <h1 className='app__title'>Password Generator</h1>
 
       <OptionsCard

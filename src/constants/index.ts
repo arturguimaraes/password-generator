@@ -3,6 +3,7 @@ import type { CharsetKey, Config } from '../types';
 // LocalStorage keys
 export const STORAGE_KEY = 'password-generator:history';
 export const CONFIG_KEY = 'password-generator:config';
+export const THEME_KEY = 'password-generator:theme';
 
 export const MIN_LENGTH = 4;
 export const MAX_LENGTH = 64;
