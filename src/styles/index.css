@@ -319,6 +319,51 @@ body {
   align-items: center;
 }
 
+.note {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.note__text {
+  max-width: 14rem;
+  overflow-wrap: anywhere;
+}
+
+.note__text--hidden {
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* Note buttons aren't destructive, so don't use the red icon hover */
+.note__btn {
+  margin-top: 0;
+}
+
+.note__btn:hover {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.note__add {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.note__input {
+  width: 100%;
+  min-width: 10rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: inherit;
+  font: inherit;
+}
+
 .footer {
   margin-top: auto;
   padding: 1rem 0 0;

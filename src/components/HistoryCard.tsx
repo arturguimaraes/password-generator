@@ -1,13 +1,15 @@
 import type { PasswordEntry } from '../types';
 import { CopyButton } from './CopyButton';
+import { NoteCell } from './NoteCell';
 
 type HistoryCardProps = {
   entries: PasswordEntry[];
   onDelete: (id: string) => void;
+  onNoteChange: (id: string, note: string) => void;
   onClear: () => void;
 };
 
-export function HistoryCard({ entries, onDelete, onClear }: HistoryCardProps) {
+export function HistoryCard({ entries, onDelete, onNoteChange, onClear }: HistoryCardProps) {
   return (
     <section className='card'>
       <div className='card__header'>
@@ -27,6 +29,7 @@ export function HistoryCard({ entries, onDelete, onClear }: HistoryCardProps) {
             <thead>
               <tr>
                 <th>Password</th>
+                <th>Note</th>
                 <th>Generated at</th>
                 <th className='table__actions'>Actions</th>
               </tr>
@@ -36,6 +39,9 @@ export function HistoryCard({ entries, onDelete, onClear }: HistoryCardProps) {
                 <tr key={entry.id}>
                   <td>
                     <code>{entry.value}</code>
+                  </td>
+                  <td>
+                    <NoteCell note={entry.note} onChange={(note) => onNoteChange(entry.id, note)} />
                   </td>
                   <td>{new Date(entry.createdAt).toLocaleString()}</td>
                   <td className='table__actions'>
