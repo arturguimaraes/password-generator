@@ -8,6 +8,8 @@ export const THEME_KEY = 'password-generator:theme';
 export const MIN_LENGTH = 4;
 export const MAX_LENGTH = 64;
 
+export const NOTE_MAX_LENGTH = 40;
+
 export const DEFAULT_CONFIG: Config = {
   useUppercase: true,
   useLowercase: true,

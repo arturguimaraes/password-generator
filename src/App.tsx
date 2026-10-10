@@ -56,6 +56,12 @@ const App = () => {
     setHistory((prev) => prev.filter((entry) => entry.id !== id));
   };
 
+  const handleNoteChange = (id: string, note: string) => {
+    setHistory((prev) =>
+      prev.map((entry) => (entry.id === id ? { ...entry, note: note || undefined } : entry)),
+    );
+  };
+
   const handleClearHistory = () => {
     if (history.length === 0) return;
     if (window.confirm('Delete all password history? This cannot be undone.')) {
@@ -77,7 +83,12 @@ const App = () => {
         generated={currentPassword}
       />
 
-      <HistoryCard entries={history} onDelete={handleDelete} onClear={handleClearHistory} />
+      <HistoryCard
+        entries={history}
+        onDelete={handleDelete}
+        onNoteChange={handleNoteChange}
+        onClear={handleClearHistory}
+      />
 
       <Footer />
     </div>
